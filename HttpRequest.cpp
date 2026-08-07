@@ -1,5 +1,6 @@
 #include "HttpRequest.hpp"
-#include <algorithm>
+#include <sstream>
+#include <string>
 
 HttpRequest::HttpRequest() {
     reset();
@@ -9,12 +10,14 @@ HttpRequest::~HttpRequest() {}
 
 void HttpRequest::reset() {
     state = REQUEST_LINE;
+    chunk_state = NOCHUNK;
     method.clear();
     uri.clear();
     version.clear();
     headers.clear();
     body.clear();
     content_length = 0;
+    chunk_length = 0;
 }
 
 std::string HttpRequest::trim(const std::string& str) {
@@ -38,13 +41,13 @@ bool HttpRequest::parse(std::string& raw_data) {
     while (!raw_data.empty() && state != COMPLETE && state != ERROR) {
         switch (state) {
             case REQUEST_LINE:
-                if (!parse_request_line(raw_data)) return true; // Wait for more data
+                if (!parse_request_line(raw_data)) return true;
                 break;
             case HEADERS:
-                if (!parse_headers(raw_data)) return true; // Wait for more data
+                if (!parse_headers(raw_data)) return true;
                 break;
             case BODY:
-                if (!parse_body(raw_data)) return true; // Wait for more data
+                if (!parse_body(raw_data)) return true;
                 break;
             default:
                 break;
@@ -77,6 +80,12 @@ bool HttpRequest::parse_headers(std::string& raw_data) {
                 std::istringstream iss(headers["Content-Length"]);
                 iss >> content_length;
                 state = BODY;
+            } else if (headers.count("Transfer-Encoding") && headers["Transfer-Encoding"] == "chunked") {
+                if (headers.count("Content-Length")) {
+                    state = ERROR;
+                    return false;
+                }
+                chunk_state = CHUNK_SIZE;
             } else {
                 state = COMPLETE;
             }
@@ -97,15 +106,69 @@ bool HttpRequest::parse_headers(std::string& raw_data) {
 }
 
 bool HttpRequest::parse_body(std::string& raw_data) {
-    size_t bytes_to_read = content_length - body.size();
-    if (raw_data.size() >= bytes_to_read) {
-        body += raw_data.substr(0, bytes_to_read);
-        raw_data.erase(0, bytes_to_read);
-        state = COMPLETE;
-        return true;
+    if (chunk_state != NOCHUNK) {
+        while (true) {
+            if (chunk_state == CHUNK_SIZE) {
+                size_t pos = raw_data.find("\r\n");
+                if (pos == std::string::npos) return false;
+                
+                std::string line = raw_data.substr(0, pos);
+                raw_data.erase(0, pos + 2);
+                
+                std::istringstream iss(line);
+                iss >> std::hex >> chunk_length;
+                if (iss.fail()) {
+                    state = ERROR;
+                    return false;
+                }
+                
+                if (chunk_length == 0) {
+                    chunk_state = CHUNK_END;
+                } else {
+                    chunk_state = CHUNK_DATA;
+                }
+            } else if (chunk_state == CHUNK_DATA) {
+                if (raw_data.size() >= chunk_length) {
+                    body += raw_data.substr(0, chunk_length);
+                    raw_data.erase(0, chunk_length);
+                    chunk_length = 0;
+                    chunk_state = CHUNK_CRLF;
+                } else {
+                    body += raw_data;
+                    chunk_length -= raw_data.size();
+                    raw_data.clear();
+                    return false;
+                }
+            } else if (chunk_state == CHUNK_CRLF || chunk_state == CHUNK_END) {
+                if (raw_data.size() >= 2) {
+                    if (raw_data.substr(0, 2) == "\r\n") {
+                        raw_data.erase(0, 2);
+                        if (chunk_state == CHUNK_END) {
+                            state = COMPLETE;
+                            return true;
+                        } else {
+                            chunk_state = CHUNK_SIZE;
+                        }
+                    } else {
+                        state = ERROR;
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            }
+        }
     } else {
-        body += raw_data;
-        raw_data.clear();
-        return false; // Need more data
+        size_t bytes_to_read = content_length - body.size();
+        if (raw_data.size() >= bytes_to_read) {
+            body += raw_data.substr(0, bytes_to_read);
+            raw_data.erase(0, bytes_to_read);
+            state = COMPLETE;
+            return true;
+        } else {
+            body += raw_data;
+            raw_data.clear();
+            return false;
+        }
     }
 }

@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <sstream>
 
 #define buffersize 1024
 

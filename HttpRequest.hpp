@@ -14,13 +14,23 @@ public:
         ERROR
     };
 
+    enum ChunkState {
+        NOCHUNK,
+        CHUNK_SIZE,
+        CHUNK_DATA,
+        CHUNK_CRLF,
+        CHUNK_END
+    };
+
     State                               state;
+    ChunkState                          chunk_state;
     std::string                         method;
     std::string                         uri;
     std::string                         version;
     std::map<std::string, std::string>  headers;
     std::string                         body;
     size_t                              content_length;
+    size_t                              chunk_length;
 
     HttpRequest();
     ~HttpRequest();
