@@ -5,45 +5,45 @@
 #include <map>
 
 class HttpRequest {
-public:
-    enum State {
-        REQUEST_LINE,
-        HEADERS,
-        BODY,
-        COMPLETE,
-        ERROR
-    };
+	public:
+		enum State {
+			REQUEST_LINE,
+			HEADERS,
+			BODY,
+			COMPLETE,
+			ERROR
+		};
 
-    enum ChunkState {
-        NOCHUNK,
-        CHUNK_SIZE,
-        CHUNK_DATA,
-        CHUNK_CRLF,
-        CHUNK_END
-    };
+		enum ChunkState {
+			NOCHUNK,
+			CHUNK_SIZE,
+			CHUNK_DATA,
+			CHUNK_CRLF,
+			CHUNK_END
+		};
 
-    State                               state;
-    ChunkState                          chunk_state;
-    std::string                         method;
-    std::string                         uri;
-    std::string                         version;
-    std::map<std::string, std::string>  headers;
-    std::string                         body;
-    size_t                              content_length;
-    size_t                              chunk_length;
+		State                               state;
+		ChunkState                          chunk_state;
+		std::string                         method;
+		std::string                         uri;
+		std::string                         version;
+		std::map<std::string, std::string>  headers;
+		std::string                         body;
+		size_t                              content_length;
+		size_t                              chunk_length;
 
-    HttpRequest();
-    ~HttpRequest();
+		HttpRequest();
+		~HttpRequest();
 
-    void reset();
-    bool parse(std::string& raw_data);
+		void reset();
+		bool parse(std::string& raw_data);
 
-private:
-    bool parse_request_line(std::string& raw_data);
-    bool parse_headers(std::string& raw_data);
-    bool parse_body(std::string& raw_data);
-    std::string trim(const std::string& str);
-    bool get_line(std::string& raw_data, std::string& line);
+	private:
+		bool parse_request_line(std::string& raw_data);
+		bool parse_headers(std::string& raw_data);
+		bool parse_body(std::string& raw_data);
+		std::string trim(const std::string& str);
+		bool get_line(std::string& raw_data, std::string& line);
 };
 
 #endif

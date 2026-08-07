@@ -13,24 +13,24 @@
 #include "Connection.hpp"
 
 class Server {
-private:
-    int                         socket_fd;
-    struct sockaddr_in          server_addr;
+	private:
+		int                         socket_fd;
+		struct sockaddr_in          server_addr;
 
-    int                         epoll_fd;
-    std::map<int, Connection*>  clients;
-    struct  epoll_event         events[MAX_EVENTS];
+		int                         epoll_fd;
+		std::map<int, Connection*>  clients;
+		struct  epoll_event         events[MAX_EVENTS];
 
-    void set_nonblocking(int fd);
-    void update_epoll(int fd, int events_flags);
-    void accept_connections();
-    void process_client(struct epoll_event& event);
+		void set_nonblocking(int fd);
+		void update_epoll(int fd, int events_flags);
+		void accept_connections();
+		void process_client(struct epoll_event& event);
 
-public:
-    Server(const char* ip, int port);
-    ~Server();
+	public:
+		Server(const char* ip, int port);
+		~Server();
 
-    void run();
+		void run();
 };
 
 #endif

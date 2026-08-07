@@ -10,15 +10,15 @@
 #include "Server.hpp"
 
 int main(int argc, char* argv[]) {
-    (void)argc;
-    (void)argv;
+	(void)argc;
+	(void)argv;
 
-    try {
-        Server server("127.0.0.1", 8080);
-        server.run();
-    } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << "\n";
-        return 1;
-    }
-    return 0;
+	try {
+		Server server("127.0.0.1", 8080);
+		server.run();
+	} catch (const std::exception& e) {
+		std::cerr << "Exception: " << e.what() << "\n";
+		return 1;
+	}
+	return 0;
 }

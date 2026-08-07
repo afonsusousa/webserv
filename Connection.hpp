@@ -6,19 +6,19 @@
 #include "HttpRequest.hpp"
 
 class Connection {
-public:
-    int                 fd;
-    struct sockaddr_in  addr;
-    std::string         read_buffer;
-    std::string         write_buffer;
-    HttpRequest         request;
+	public:
+		int                 fd;
+		struct sockaddr_in  addr;
+		std::string         read_buffer;
+		std::string         write_buffer;
+		HttpRequest         request;
 
-    Connection(int fd, struct sockaddr_in addr);
-    ~Connection();
+		Connection(int fd, struct sockaddr_in addr);
+		~Connection();
 
-    bool handle_read();
-    bool handle_write();
-    bool process();
+		bool handle_read();
+		bool handle_write();
+		bool process();
 };
 
 #endif
