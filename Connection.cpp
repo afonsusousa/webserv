@@ -53,15 +53,31 @@ bool Connection::handle_write() {
 }
 
 bool Connection::process() {
-    size_t pos = read_buffer.find('\n');
-    if (pos != std::string::npos) {
-        std::string line = read_buffer.substr(0, pos);
-        read_buffer.erase(0, pos + 1);
-
-        for (std::string::iterator it = line.begin(); it != line.end(); ++it) {
-            *it = std::toupper(static_cast<unsigned char>(*it));
-        }
-        write_buffer += line + "\n";
+    if (!request.parse(read_buffer)) {
+        return true; // wait for more data
     }
+
+    if (request.state == HttpRequest::COMPLETE) {
+        std::string response = "HTTP/1.1 200 OK\r\n";
+        response += "Content-Type: text/plain\r\n";
+        
+        std::string body_content = "Hello from Webserv!\n";
+        body_content += "Method: " + request.method + "\n";
+        body_content += "URI: " + request.uri + "\n";
+        body_content += "Body: " + request.body + "\n";
+        
+        std::stringstream ss;
+        ss << body_content.size();
+        response += "Content-Length: " + ss.str() + "\r\n\r\n";
+        response += body_content;
+
+        write_buffer += response;
+        request.reset();
+    } else if (request.state == HttpRequest::ERROR) {
+        std::string response = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
+        write_buffer += response;
+        request.reset();
+    }
+
     return true;
 }
