@@ -3,8 +3,6 @@
 
 #include <string>
 #include <map>
-#include <iostream>
-#include <sstream>
 
 class HttpRequest {
 public:
@@ -16,13 +14,13 @@ public:
         ERROR
     };
 
-    State       state;
-    std::string method;
-    std::string uri;
-    std::string version;
-    std::map<std::string, std::string> headers;
-    std::string body;
-    size_t      content_length;
+    State                               state;
+    std::string                         method;
+    std::string                         uri;
+    std::string                         version;
+    std::map<std::string, std::string>  headers;
+    std::string                         body;
+    size_t                              content_length;
 
     HttpRequest();
     ~HttpRequest();

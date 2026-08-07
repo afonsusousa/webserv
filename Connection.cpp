@@ -1,11 +1,7 @@
 #include "Connection.hpp"
-#include <algorithm>
-#include <cctype>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <errno.h>
-#include <cstdio>
-#include <cstdlib>
 
 #define buffersize 1024
 
@@ -60,12 +56,12 @@ bool Connection::process() {
     if (request.state == HttpRequest::COMPLETE) {
         std::string response = "HTTP/1.1 200 OK\r\n";
         response += "Content-Type: text/plain\r\n";
-        
+
         std::string body_content = "Hello from Webserv!\n";
         body_content += "Method: " + request.method + "\n";
         body_content += "URI: " + request.uri + "\n";
         body_content += "Body: " + request.body + "\n";
-        
+
         std::stringstream ss;
         ss << body_content.size();
         response += "Content-Length: " + ss.str() + "\r\n\r\n";
