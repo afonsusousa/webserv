@@ -4,6 +4,7 @@
 #include <string>
 #include <netinet/in.h>
 #include "HttpRequest.hpp"
+#include "LocalResource.hpp"
 
 class Connection {
 	public:
@@ -12,6 +13,7 @@ class Connection {
 		std::string         read_buffer;
 		std::string         write_buffer;
 		HttpRequest         request;
+		LocalResource*      resource;
 
 		Connection(int fd, struct sockaddr_in addr);
 		~Connection();

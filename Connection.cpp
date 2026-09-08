@@ -1,14 +1,18 @@
 #include "Connection.hpp"
+#include "FileResource.hpp"
+#include "CgiResource.hpp"
 #include <unistd.h>
 #include <sys/socket.h>
 #include <errno.h>
-#include <sstream>
 
 #define buffersize 1024
 
-Connection::Connection(int fd, struct sockaddr_in addr) : fd(fd), addr(addr) {}
+Connection::Connection(int fd, struct sockaddr_in addr) : fd(fd), addr(addr), resource(NULL) {}
 
 Connection::~Connection() {
+	if (resource) {
+		delete resource;
+	}
 	close(fd);
 }
 
@@ -55,25 +59,33 @@ bool Connection::process() {
 	}
 
 	if (request.state == HttpRequest::COMPLETE) {
-		std::string response = "HTTP/1.1 200 OK\r\n";
-		response += "Content-Type: text/plain\r\n";
+		if (!resource) {
+			std::string base_path = "."; //will come from config later
 
-		std::string body_content = "Hello from Webserv!\n";
-		body_content += "Method: " + request.method + "\n";
-		body_content += "URI: " + request.uri + "\n";
-		body_content += "Body: " + request.body + "\n";
+			if (request.uri.length() >= 4 && request.uri.substr(request.uri.length() - 4) == ".cgi") {
+				//everything CGI goes here
+				resource = new CgiResource(base_path, request.uri, request);
+			} else {
+				resource = new FileResource(base_path, request.uri);
+			}
+		}
 
-		std::stringstream ss;
-		ss << body_content.size();
-		response += "Content-Length: " + ss.str() + "\r\n\r\n";
-		response += body_content;
+		if (write_buffer.size() < 65536) { //64KB max
+			if (resource->process(write_buffer)) {
+				request.reset();
+				delete resource;
+				resource = NULL;
+			}
+		}
 
-		write_buffer += response;
-		request.reset();
 	} else if (request.state == HttpRequest::ERROR) {
 		std::string response = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
 		write_buffer += response;
 		request.reset();
+		if (resource) {
+			delete resource;
+			resource = NULL;
+		}
 	}
 
 	return true;

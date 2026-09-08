@@ -90,31 +90,33 @@ void Server::accept_connections() {
 }
 
 void Server::process_client(struct epoll_event& event) {
-    int c_sock = event.data.fd;
-    Connection* conn = clients[c_sock];
-    bool ok = true;
+	int c_sock = event.data.fd;
+	Connection* conn = clients[c_sock];
+	bool ok = true;
 
-    if (event.events & EPOLLIN) {
-        ok = conn->handle_read();
-        if (ok)
-            conn->process();
-    }
+	if (event.events & EPOLLIN) {
+		ok = conn->handle_read();
+	}
 
-    if (ok && (event.events & EPOLLOUT)) {
-        ok = conn->handle_write();
-    }
+	if (ok && (event.events & EPOLLOUT)) {
+		ok = conn->handle_write();
+	}
 
-    if (!ok) {
-        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, c_sock, NULL);
-        delete conn;
-        clients.erase(c_sock);
-    } else {
-        int event_flags = EPOLLIN;
-        if (!conn->write_buffer.empty()) {
-            event_flags |= EPOLLOUT;
-        }
-        update_epoll(c_sock, event_flags);
-    }
+	if (ok) {
+		conn->process();
+	}
+
+	if (!ok) {
+		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, c_sock, NULL);
+		delete conn;
+		clients.erase(c_sock);
+	} else {
+		int event_flags = EPOLLIN;
+		if (!conn->write_buffer.empty() || conn->resource) {
+			event_flags |= EPOLLOUT;
+		}
+		update_epoll(c_sock, event_flags);
+	}
 }
 
 void Server::run() {
