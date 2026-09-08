@@ -1,0 +1,110 @@
+[
+  {
+    "file": "main.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++98",
+      "-I.",
+      "-I./LocalResource",
+      "-c",
+      "main.cpp",
+      "-o",
+      "main.o"
+    ],
+    "directory": "/home/afonsusousa/42/Projects/webserv",
+    "output": "main.o"
+  },
+  {
+    "file": "Server.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++98",
+      "-I.",
+      "-I./LocalResource",
+      "-c",
+      "Server.cpp",
+      "-o",
+      "Server.o"
+    ],
+    "directory": "/home/afonsusousa/42/Projects/webserv",
+    "output": "Server.o"
+  },
+  {
+    "file": "Connection.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++98",
+      "-I.",
+      "-I./LocalResource",
+      "-c",
+      "Connection.cpp",
+      "-o",
+      "Connection.o"
+    ],
+    "directory": "/home/afonsusousa/42/Projects/webserv",
+    "output": "Connection.o"
+  },
+  {
+    "file": "HttpRequest.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++98",
+      "-I.",
+      "-I./LocalResource",
+      "-c",
+      "HttpRequest.cpp",
+      "-o",
+      "HttpRequest.o"
+    ],
+    "directory": "/home/afonsusousa/42/Projects/webserv",
+    "output": "HttpRequest.o"
+  },
+  {
+    "file": "LocalResource/FileResource.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++98",
+      "-I.",
+      "-I./LocalResource",
+      "-c",
+      "LocalResource/FileResource.cpp",
+      "-o",
+      "LocalResource/FileResource.o"
+    ],
+    "directory": "/home/afonsusousa/42/Projects/webserv",
+    "output": "LocalResource/FileResource.o"
+  },
+  {
+    "file": "LocalResource/CgiResource.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++98",
+      "-I.",
+      "-I./LocalResource",
+      "-c",
+      "LocalResource/CgiResource.cpp",
+      "-o",
+      "LocalResource/CgiResource.o"
+    ],
+    "directory": "/home/afonsusousa/42/Projects/webserv",
+    "output": "LocalResource/CgiResource.o"
+  }
+]

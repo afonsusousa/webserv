@@ -2,7 +2,6 @@
 #define LOCALRESOURCE_HPP
 
 #include <string>
-#include "HttpRequest.hpp"
 
 class LocalResource {
 	public:
