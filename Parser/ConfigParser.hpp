@@ -45,3 +45,23 @@ public:
 
     ~Config();
 };
+
+class Parser {
+public:
+    Parser(const std::string& filename);
+    ~Parser();
+
+    Config* parse();
+
+private:
+    std::vector<std::string> tokens;
+    size_t current_token_idx;
+    std::string current_token;
+
+    void advance();
+    bool match(const std::string& expected);
+    void expect(const std::string& expected);
+    void tokenize(const std::string& filename);
+    std::string peek(size_t offset = 0);
+
+};
