@@ -16,4 +16,5 @@ private:
     
     void parse_server_block(Config* config);
     LocationConfig parse_location_block(const std::string& path);
+    bool is_number(const std::string& str);
 };

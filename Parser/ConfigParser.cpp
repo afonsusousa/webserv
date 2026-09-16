@@ -2,10 +2,19 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <sstream>
+#include <cctype>
 
 ConfigParser::ConfigParser(const std::string& filename) : tokenizer(filename) {}
 
 ConfigParser::~ConfigParser() {}
+
+bool ConfigParser::is_number(const std::string& str) {
+    if (str.empty()) return false;
+    for (size_t i = 0; i < str.length(); ++i) {
+        if (!std::isdigit(str[i])) return false;
+    }
+    return true;
+}
 
 LocationConfig ConfigParser::parse_location_block(const std::string& path) {
     LocationConfig loc;
@@ -18,15 +27,19 @@ LocationConfig ConfigParser::parse_location_block(const std::string& path) {
             tokenizer.expect(";");
         } else if (tokenizer.match("allow_methods")) {
             loc.allow_methods = 0;
-            while (tokenizer.current_token() != ";") {
+            while (!tokenizer.empty() && tokenizer.current_token() != ";") {
                 if (tokenizer.current_token() == "GET") loc.allow_methods |= 1;
                 else if (tokenizer.current_token() == "POST") loc.allow_methods |= 2;
                 else if (tokenizer.current_token() == "DELETE") loc.allow_methods |= 4;
+                else tokenizer.throw_error("Unknown HTTP method in allow_methods: '" + tokenizer.current_token() + "'");
                 tokenizer.advance();
             }
             tokenizer.expect(";");
         } else if (tokenizer.match("autoindex")) {
-            loc.directory_listing = (tokenizer.current_token() == "on");
+            std::string val = tokenizer.current_token();
+            if (val == "on") loc.directory_listing = true;
+            else if (val == "off") loc.directory_listing = false;
+            else tokenizer.throw_error("Invalid autoindex value (must be 'on' or 'off'): '" + val + "'");
             tokenizer.advance();
             tokenizer.expect(";");
         } else if (tokenizer.match("index")) {
@@ -34,6 +47,9 @@ LocationConfig ConfigParser::parse_location_block(const std::string& path) {
             tokenizer.advance();
             tokenizer.expect(";");
         } else if (tokenizer.match("return")) {
+            if (!is_number(tokenizer.current_token())) {
+                tokenizer.throw_error("Invalid return status code: '" + tokenizer.current_token() + "'");
+            }
             int code = std::atoi(tokenizer.current_token().c_str());
             tokenizer.advance();
             std::string redirect_url = tokenizer.current_token();
@@ -41,7 +57,10 @@ LocationConfig ConfigParser::parse_location_block(const std::string& path) {
             tokenizer.expect(";");
             loc.redirect = std::make_pair(code, redirect_url);
         } else if (tokenizer.match("upload_enable")) {
-            loc.upload_enabled = (tokenizer.current_token() == "on");
+            std::string val = tokenizer.current_token();
+            if (val == "on") loc.upload_enabled = true;
+            else if (val == "off") loc.upload_enabled = false;
+            else tokenizer.throw_error("Invalid upload_enable value (must be 'on' or 'off'): '" + val + "'");
             tokenizer.advance();
             tokenizer.expect(";");
         } else if (tokenizer.match("upload_store")) {
@@ -80,18 +99,13 @@ void ConfigParser::parse_server_block(Config* config) {
             
             if (tokenizer.match(":")) { // format is host:port
                 addr.host = first_token;
+                if (!is_number(tokenizer.current_token())) {
+                     tokenizer.throw_error("Invalid port in listen directive: '" + tokenizer.current_token() + "'");
+                }
                 addr.port = std::atoi(tokenizer.current_token().c_str());
                 tokenizer.advance();
             } else {
-                bool is_port = true;
-                for (size_t i = 0; i < first_token.size(); ++i) {
-                    if (!isdigit(first_token[i])) {
-                        is_port = false;
-                        break;
-                    }
-                }
-                
-                if (is_port) {
+                if (is_number(first_token)) {
                     addr.host = "0.0.0.0";
                     addr.port = std::atoi(first_token.c_str());
                 } else {
@@ -102,16 +116,25 @@ void ConfigParser::parse_server_block(Config* config) {
             tokenizer.expect(";");
             listens.push_back(addr);
         } else if (tokenizer.match("server_name")) {
-            while (tokenizer.current_token() != ";") {
+            while (!tokenizer.empty() && tokenizer.current_token() != ";") {
+                if (tokenizer.current_token() == "{" || tokenizer.current_token() == "}") {
+                    tokenizer.throw_error("Unexpected block bound inside server_name");
+                }
                 server_names.push_back(tokenizer.current_token());
                 tokenizer.advance();
             }
             tokenizer.expect(";");
         } else if (tokenizer.match("client_max_body_size")) {
+            if (!is_number(tokenizer.current_token())) {
+                tokenizer.throw_error("Invalid client_max_body_size value: '" + tokenizer.current_token() + "'");
+            }
             server->client_max_body_size = std::atoi(tokenizer.current_token().c_str());
             tokenizer.advance();
             tokenizer.expect(";");
         } else if (tokenizer.match("error_page")) {
+            if (!is_number(tokenizer.current_token())) {
+                tokenizer.throw_error("Invalid status code for error_page: '" + tokenizer.current_token() + "'");
+            }
             int code = std::atoi(tokenizer.current_token().c_str());
             tokenizer.advance();
             std::string page = tokenizer.current_token();
