@@ -7,7 +7,8 @@
 
 #define buffersize 1024
 
-Connection::Connection(int fd, struct sockaddr_in addr) : fd(fd), addr(addr), resource(NULL) {}
+Connection::Connection(int fd, struct sockaddr_in addr, std::map<std::string, ServerBlock*>& mapped_vhosts) 
+	: fd(fd), addr(addr), resource(NULL), vhosts(mapped_vhosts) {}
 
 Connection::~Connection() {
 	if (resource) {
@@ -60,7 +61,42 @@ bool Connection::process() {
 
 	if (request.state == HttpRequest::COMPLETE) {
 		if (!resource) {
-			std::string base_path = "."; //will come from config later
+			
+			std::string host = "";
+			if (request.headers.count("Host")) {
+				host = request.headers["Host"];
+				size_t colon = host.find(':');
+				if (colon != std::string::npos) {
+					host = host.substr(0, colon); // Strip port
+				}
+			}
+
+			ServerBlock* server = NULL;
+			if (vhosts.count(host)) {
+				server = vhosts[host];
+			} else if (vhosts.count("")) {
+				server = vhosts[""]; // Explicit default
+			} else if (!vhosts.empty()) {
+				server = vhosts.begin()->second; // Implicit fallback
+			}
+
+			std::string base_path = "."; 
+			if (server) {
+				std::string match_path = "";
+				std::map<std::string, LocationConfig>::iterator it;
+				for (it = server->locations.begin(); it != server->locations.end(); ++it) {
+					// Longest prefix match
+					if (request.uri.find(it->first) == 0) {
+						if (it->first.length() > match_path.length()) {
+							match_path = it->first;
+						}
+					}
+				}
+				
+				if (!match_path.empty()) {
+					base_path = server->locations[match_path].base_path;
+				}
+			}
 
 			if (request.uri.length() >= 4 && request.uri.substr(request.uri.length() - 4) == ".cgi") {
 				//everything CGI goes here

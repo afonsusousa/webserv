@@ -72,31 +72,33 @@ void ConfigParser::parse_server_block(Config* config) {
     
     while (!tokenizer.empty() && tokenizer.current_token() != "}") {
         if (tokenizer.match("listen")) {
-            std::string host_port = tokenizer.current_token();
+            std::string first_token = tokenizer.current_token();
             tokenizer.advance();
-            tokenizer.expect(";");
             
             ListenAddress addr;
-            size_t colon = host_port.find(':');
-            if (colon != std::string::npos) {
-                addr.host = host_port.substr(0, colon);
-                addr.port = std::atoi(host_port.substr(colon + 1).c_str());
+            
+            if (tokenizer.match(":")) { // format is host:port
+                addr.host = first_token;
+                addr.port = std::atoi(tokenizer.current_token().c_str());
+                tokenizer.advance();
             } else {
                 bool is_port = true;
-                for (size_t i = 0; i < host_port.size(); ++i) {
-                    if (!isdigit(host_port[i])) {
+                for (size_t i = 0; i < first_token.size(); ++i) {
+                    if (!isdigit(first_token[i])) {
                         is_port = false;
                         break;
                     }
                 }
+                
                 if (is_port) {
                     addr.host = "0.0.0.0";
-                    addr.port = std::atoi(host_port.c_str());
+                    addr.port = std::atoi(first_token.c_str());
                 } else {
-                    addr.host = host_port;
+                    addr.host = first_token;
                     addr.port = 80;
                 }
             }
+            tokenizer.expect(";");
             listens.push_back(addr);
         } else if (tokenizer.match("server_name")) {
             while (tokenizer.current_token() != ";") {
