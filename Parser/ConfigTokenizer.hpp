@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <vector>
+#include <fstream>
 #include <stdexcept>
 
 class ConfigTokenizer {
@@ -12,16 +12,22 @@ public:
     void advance();
     bool match(const std::string& expected);
     void expect(const std::string& expected);
-    std::string peek(size_t offset = 0) const;
     
     std::string current_token() const;
     bool empty() const;
 
-private:
-    std::vector<std::string> tokens;
-    size_t current_token_idx;
-    std::string m_current_token;
+    size_t get_line_num() const;
+    size_t get_col_num() const;
 
-    void tokenize(const std::string& filename);
-    std::string get_word(std::string::iterator& it, const std::string::iterator& end);
+    void throw_error(const std::string& message) const;
+
+private:
+    std::ifstream file;
+    std::string   current_line;
+    size_t        line_pos;
+    size_t        line_number;
+    size_t        col_number;
+    std::string   m_current_token;
+
+    std::string get_word();
 };

@@ -1,6 +1,7 @@
 #include "Parser/ConfigParser.hpp"
 #include <cstdlib>
 #include <stdexcept>
+#include <sstream>
 
 ConfigParser::ConfigParser(const std::string& filename) : tokenizer(filename) {}
 
@@ -55,7 +56,7 @@ LocationConfig ConfigParser::parse_location_block(const std::string& path) {
             tokenizer.expect(";");
             loc.cgi[ext] = cgi_path;
         } else {
-            throw std::runtime_error("Unknown location directive: " + tokenizer.current_token());
+            tokenizer.throw_error("Unknown location directive: '" + tokenizer.current_token() + "'");
         }
     }
     tokenizer.expect("}");
@@ -123,7 +124,7 @@ void ConfigParser::parse_server_block(Config* config) {
             tokenizer.expect("{");
             server->locations[path] = parse_location_block(path);
         } else {
-            throw std::runtime_error("Unknown server directive: " + tokenizer.current_token());
+            tokenizer.throw_error("Unknown server directive: '" + tokenizer.current_token() + "'");
         }
     }
     tokenizer.expect("}");
@@ -152,7 +153,7 @@ Config* ConfigParser::parse() {
         if (tokenizer.match("server")) {
             parse_server_block(config);
         } else {
-            throw std::runtime_error("Expected 'server' block, got: " + tokenizer.current_token());
+            tokenizer.throw_error("Expected 'server' block, got: '" + tokenizer.current_token() + "'");
         }
     }
     

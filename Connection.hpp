@@ -9,6 +9,12 @@
 #include "Config.hpp"
 
 class Connection {
+	private:
+		ServerBlock*    get_server_block();
+		LocationConfig* get_location(ServerBlock* server);
+		bool            handle_redirect(LocationConfig* loc);
+		void            initialize_resource();
+
 	public:
 		int                                      fd;
 		struct sockaddr_in                       addr;
