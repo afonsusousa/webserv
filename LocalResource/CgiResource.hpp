@@ -3,6 +3,7 @@
 
 #include "LocalResource.hpp"
 #include <string>
+#include "HttpRequest.hpp"
 
 class CgiResource : public LocalResource {
 	private:
