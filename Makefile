@@ -2,7 +2,7 @@ CXX := c++
 CXXFLAGS := -Wall -Wextra -Werror -std=c++98 -I. -I./LocalResource
 PROG := webserv
 
-SRCS := main.cpp Server.cpp Connection.cpp HttpRequest.cpp LocalResource/FileResource.cpp LocalResource/CgiResource.cpp Parser/ConfigParser.cpp
+SRCS := main.cpp Server.cpp Connection.cpp HttpRequest.cpp LocalResource/FileResource.cpp LocalResource/CgiResource.cpp Config.cpp Parser/ConfigTokenizer.cpp Parser/ConfigParser.cpp
 OBJS := ${SRCS:.cpp=.o}
 
 all: ${PROG}
